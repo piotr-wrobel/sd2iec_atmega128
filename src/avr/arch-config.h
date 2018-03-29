@@ -1124,6 +1124,143 @@ static inline void buttons_init(void) {
   PORTB |= BUTTON_NEXT | BUTTON_PREV;
 }
 
+#elif CONFIG_HARDWARE_VARIANT == 40
+/* ---------- Hardware configuration: pvgSD - based on uIEC ---------- */
+/* Note: This CONFIG_HARDWARE_VARIANT number is tested in system.c */
+//#  define HAVE_ATA
+//#  ifndef CONFIG_NO_SD
+#    define HAVE_SD
+//#  endif
+#  define SPI_LATE_INIT
+#  define CF_CHANGE_HANDLER     ISR(INT7_vect)
+#  define SD_CHANGE_HANDLER     ISR(PCINT0_vect)
+#  define SD_SUPPLY_VOLTAGE     (1L<<21)
+
+/* 250kHz slow, 2MHz fast */
+#  define SPI_DIVISOR_SLOW 32
+#  define SPI_DIVISOR_FAST 4
+
+#  define SINGLE_LED
+
+static inline void cfcard_interface_init(void) {
+  DDRE  &= ~_BV(PE7);
+  PORTE |=  _BV(PE7);
+  EICRB |=  _BV(ISC70);
+  EIMSK |=  _BV(INT7);
+}
+
+static inline uint8_t cfcard_detect(void) {
+  return !(PINE & _BV(PE7));
+}
+
+static inline void sdcard_interface_init(void) {
+  DDRB   &= ~_BV(PB7);
+  PORTB  |=  _BV(PB7);
+  DDRB   &= ~_BV(PB6);
+  PORTB  |=  _BV(PB6);
+  PCMSK0 |=  _BV(PCINT7);
+  PCICR  |=  _BV(PCIE0);
+  PCIFR  |=  _BV(PCIF0);
+}
+
+static inline uint8_t sdcard_detect(void) {
+  return !(PINB & _BV(PB7));
+}
+
+static inline uint8_t sdcard_wp(void) {
+  return PINB & _BV(PB6);
+}
+
+static inline uint8_t device_hw_address(void) {
+  /* No device jumpers on uIEC */
+  return 10;
+}
+
+static inline void device_hw_address_init(void) {
+  return;
+}
+
+static inline void leds_init(void) {
+  DDRE |= _BV(PE3);
+}
+
+static inline __attribute__((always_inline)) void set_led(uint8_t state) {
+  if (state)
+    PORTE |= _BV(PE3);
+  else
+    PORTE &= ~_BV(PE3);
+}
+
+static inline void toggle_led(void) {
+  PINE |= _BV(PE3);
+}
+
+#  define IEC_INPUT             PINE
+#  define IEC_DDR               DDRE
+#  define IEC_PORT              PORTE
+#  define IEC_PIN_ATN           PE6
+#  define IEC_PIN_DATA          PE4
+#  define IEC_PIN_CLOCK         PE5
+#  define IEC_PIN_SRQ           PE2
+#  define IEC_ATN_INT           INT6
+#  define IEC_ATN_INT_VECT      INT6_vect
+#  define IEC_CLK_INT           INT5
+#  define IEC_CLK_INT_VECT      INT5_vect
+
+static inline void iec_interrupts_init(void) {
+  EICRB |= _BV(ISC60);
+  EICRB |= _BV(ISC50);
+}
+
+#  define BUTTON_NEXT           _BV(PG4)
+#  define BUTTON_PREV           _BV(PG3)
+
+static inline rawbutton_t buttons_read(void) {
+  return PING & (BUTTON_NEXT | BUTTON_PREV);
+}
+
+static inline void buttons_init(void) {
+  DDRG  &= (uint8_t)~(BUTTON_NEXT | BUTTON_PREV);
+  PORTG |= BUTTON_NEXT | BUTTON_PREV;
+}
+
+#  define SOFTI2C_PORT          PORTD
+#  define SOFTI2C_PIN           PIND
+#  define SOFTI2C_DDR           DDRD
+#  define SOFTI2C_BIT_SCL       PD0
+#  define SOFTI2C_BIT_SDA       PD1
+#  define SOFTI2C_BIT_INTRQ     PD2
+#  define SOFTI2C_DELAY         6
+
+/* parallel cable - conflicts with the SOFTI2C pins above! */
+#  ifdef CONFIG_NO_SD
+#    define HAVE_PARALLEL
+#    define PARALLEL_HANDLER      ISR(PCINT0_vect)
+#    define PARALLEL_PDDR         DDRD      // CONN2 pins 1,3,...,15
+#    define PARALLEL_PPORT        PORTD
+#    define PARALLEL_PPIN         PIND
+#    define PARALLEL_HDDR         DDRB
+#    define PARALLEL_HPORT        PORTB
+#    define PARALLEL_HPIN         PINB
+#    define PARALLEL_HSK_OUT_BIT  5         // CONN2 pin 14, to C64 FLAG2
+#    define PARALLEL_HSK_IN_BIT   4         // CONN2 pin 16, to C64 PC2
+#    define PARALLEL_PCMSK        PCMSK0
+#    define PARALLEL_PCINT_GROUP  0
+#  elif defined(CONFIG_PARALLEL_DOLPHIN)
+#    error CONFIG_PARALLEL_DOLPHIN on uIEC requires CONFIG_NO_SD=y !
+#  endif
+
+/* Use diskmux code to optionally turn off second IDE drive */
+#  define NEED_DISKMUX
+
+#  define HAVE_BOARD_INIT
+
+static inline void board_init(void) {
+  /* Force control lines of the external SRAM high */
+  DDRG  = _BV(PG0) | _BV(PG1) | _BV(PG2);
+  PORTG = _BV(PG0) | _BV(PG1) | _BV(PG2);
+}
+
 
 #else
 #  error "CONFIG_HARDWARE_VARIANT is unset or set to an unknown value."
