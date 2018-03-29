@@ -1132,8 +1132,8 @@ static inline void buttons_init(void) {
 #    define HAVE_SD
 //#  endif
 #  define SPI_LATE_INIT
-#  define CF_CHANGE_HANDLER     ISR(INT7_vect)
-#  define SD_CHANGE_HANDLER     ISR(PCINT0_vect)
+//#  define CF_CHANGE_HANDLER     ISR(INT7_vect)
+#  define SD_CHANGE_HANDLER     ISR(INT7_vect)
 #  define SD_SUPPLY_VOLTAGE     (1L<<21)
 
 /* 250kHz slow, 2MHz fast */
@@ -1142,29 +1142,28 @@ static inline void buttons_init(void) {
 
 #  define SINGLE_LED
 
-static inline void cfcard_interface_init(void) {
+// static inline void cfcard_interface_init(void) {
+  // DDRE  &= ~_BV(PE7);
+  // PORTE |=  _BV(PE7);
+  // EICRB |=  _BV(ISC70);
+  // EIMSK |=  _BV(INT7);
+// }
+
+// static inline uint8_t cfcard_detect(void) {
+  // return !(PINE & _BV(PE7));
+// }
+
+static inline void sdcard_interface_init(void) {
+  DDRB   &= ~_BV(PB6);
+  PORTB  |=  _BV(PB6);
   DDRE  &= ~_BV(PE7);
   PORTE |=  _BV(PE7);
   EICRB |=  _BV(ISC70);
   EIMSK |=  _BV(INT7);
 }
 
-static inline uint8_t cfcard_detect(void) {
-  return !(PINE & _BV(PE7));
-}
-
-static inline void sdcard_interface_init(void) {
-  DDRB   &= ~_BV(PB7);
-  PORTB  |=  _BV(PB7);
-  DDRB   &= ~_BV(PB6);
-  PORTB  |=  _BV(PB6);
-  PCMSK0 |=  _BV(PCINT7);
-  PCICR  |=  _BV(PCIE0);
-  PCIFR  |=  _BV(PCIF0);
-}
-
 static inline uint8_t sdcard_detect(void) {
-  return !(PINB & _BV(PB7));
+  return !(PINE & _BV(PE7));
 }
 
 static inline uint8_t sdcard_wp(void) {

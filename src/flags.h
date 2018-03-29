@@ -26,7 +26,10 @@
 #ifndef FLAGS_H
 #define FLAGS_H
 
-#ifdef __AVR__
+#ifdef __AVR_ATmega128__
+/* Global flags, variable defined in doscmd.c */
+extern uint8_t globalflags;
+#elif defined __AVR__
 /* GPIOR0 is a bit-addressable register reserved for user data */
 #  define globalflags (GPIOR0)
 #else

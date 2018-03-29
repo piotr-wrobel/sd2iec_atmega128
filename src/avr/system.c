@@ -43,7 +43,12 @@ void get_mcusr(void) \
       __attribute__((section(".init3")));
 void get_mcusr(void)
 {
-  MCUSR = 0;
+#if defined __AVR_ATmega128__
+	MCUCSR = 0;
+#else
+	MCUSR = 0;
+#endif
+
   wdt_disable();
 }
 
