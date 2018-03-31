@@ -170,6 +170,9 @@ static uint32_t getbits(void *buffer, uint16_t start, int8_t bits) {
 /* Detect changes of SD card 0 */
 #ifdef SD_CHANGE_HANDLER
 SD_CHANGE_HANDLER {
+  #ifdef __AVR_ATmega128__
+	SDCICR ^= _BV(SDCICB0); //Toggle SD Change Interrupt Configuration ( 11 -> 10 > 11 -> ...(rising edge -> falling edge -> rising edge ->....) )
+  #endif
   if (sdcard_detect())
     disk_state = DISK_CHANGED;
   else

@@ -1127,10 +1127,9 @@ static inline void buttons_init(void) {
 #elif CONFIG_HARDWARE_VARIANT == 40
 /* ---------- Hardware configuration: pvgSD - based on uIEC ---------- */
 /* Note: This CONFIG_HARDWARE_VARIANT number is tested in system.c */
-//#  define HAVE_ATA
-//#  ifndef CONFIG_NO_SD
+
 #    define HAVE_SD
-//#  endif
+
 #  define SPI_LATE_INIT
 //#  define CF_CHANGE_HANDLER     ISR(INT7_vect)
 #  define SD_CHANGE_HANDLER     ISR(INT7_vect)
@@ -1140,7 +1139,7 @@ static inline void buttons_init(void) {
 #  define SPI_DIVISOR_SLOW 32
 #  define SPI_DIVISOR_FAST 4
 
-#  define SINGLE_LED
+//#  define SINGLE_LED
 
 // static inline void cfcard_interface_init(void) {
   // DDRE  &= ~_BV(PE7);
@@ -1153,12 +1152,15 @@ static inline void buttons_init(void) {
   // return !(PINE & _BV(PE7));
 // }
 
+#define SDCICB0 ISC70 //SD Change Interrupt Configuration Bit 0
+#define SDCICB1 ISC71 //SD Change Interrupt Configuration Bit 1
+#define SDCICR	EICRB ////SD Change Interrupt Configuration Register
 static inline void sdcard_interface_init(void) {
   DDRB   &= ~_BV(PB6);
   PORTB  |=  _BV(PB6);
   DDRE  &= ~_BV(PE7);
   PORTE |=  _BV(PE7);
-  EICRB |=  _BV(ISC70);
+  SDCICR |=  _BV(SDCICB1); ////The falling edge generates an interrupt request
   EIMSK |=  _BV(INT7);
 }
 
@@ -1172,26 +1174,49 @@ static inline uint8_t sdcard_wp(void) {
 
 static inline uint8_t device_hw_address(void) {
   /* No device jumpers on uIEC */
-  return 10;
+  return 8;
 }
 
 static inline void device_hw_address_init(void) {
   return;
 }
 
+// static inline void leds_init(void) {
+  // DDRE |= _BV(PE3);
+// }
+
+// static inline __attribute__((always_inline)) void set_led(uint8_t state) {
+  // if (state)
+    // PORTE |= _BV(PE3);
+  // else
+    // PORTE &= ~_BV(PE3);
+// }
+
+// static inline void toggle_led(void) {
+  // PINE |= _BV(PE3);
+// }
+
 static inline void leds_init(void) {
-  DDRE |= _BV(PE3);
+  DDRA |= _BV(PA0);
+  DDRA |= _BV(PA1);
 }
 
-static inline __attribute__((always_inline)) void set_led(uint8_t state) {
+static inline __attribute__((always_inline)) void set_busy_led(uint8_t state) {
   if (state)
-    PORTE |= _BV(PE3);
+    PORTA &= ~_BV(PA0);
   else
-    PORTE &= ~_BV(PE3);
+    PORTA |= _BV(PA0);
 }
 
-static inline void toggle_led(void) {
-  PINE |= _BV(PE3);
+static inline __attribute__((always_inline)) void set_dirty_led(uint8_t state) {
+  if (state)
+    PORTA &= ~_BV(PA1);
+  else
+    PORTA |= _BV(PA1);
+}
+
+static inline void toggle_dirty_led(void) {
+  PORTA ^= _BV(PA1);
 }
 
 #  define IEC_INPUT             PINE
@@ -1207,8 +1232,8 @@ static inline void toggle_led(void) {
 #  define IEC_CLK_INT_VECT      INT5_vect
 
 static inline void iec_interrupts_init(void) {
-  EICRB |= _BV(ISC60);
-  EICRB |= _BV(ISC50);
+  EICRB |= _BV(ISC61); //The falling edge generates an interrupt request
+  EICRB |= _BV(ISC51); ////The falling edge generates an interrupt request
 }
 
 #  define BUTTON_NEXT           _BV(PG4)
@@ -1230,24 +1255,6 @@ static inline void buttons_init(void) {
 #  define SOFTI2C_BIT_SDA       PD1
 #  define SOFTI2C_BIT_INTRQ     PD2
 #  define SOFTI2C_DELAY         6
-
-/* parallel cable - conflicts with the SOFTI2C pins above! */
-#  ifdef CONFIG_NO_SD
-#    define HAVE_PARALLEL
-#    define PARALLEL_HANDLER      ISR(PCINT0_vect)
-#    define PARALLEL_PDDR         DDRD      // CONN2 pins 1,3,...,15
-#    define PARALLEL_PPORT        PORTD
-#    define PARALLEL_PPIN         PIND
-#    define PARALLEL_HDDR         DDRB
-#    define PARALLEL_HPORT        PORTB
-#    define PARALLEL_HPIN         PINB
-#    define PARALLEL_HSK_OUT_BIT  5         // CONN2 pin 14, to C64 FLAG2
-#    define PARALLEL_HSK_IN_BIT   4         // CONN2 pin 16, to C64 PC2
-#    define PARALLEL_PCMSK        PCMSK0
-#    define PARALLEL_PCINT_GROUP  0
-#  elif defined(CONFIG_PARALLEL_DOLPHIN)
-#    error CONFIG_PARALLEL_DOLPHIN on uIEC requires CONFIG_NO_SD=y !
-#  endif
 
 /* Use diskmux code to optionally turn off second IDE drive */
 #  define NEED_DISKMUX
@@ -1397,7 +1404,12 @@ static inline __attribute__((always_inline)) void set_srq(uint8_t state) {
 #undef COND_INV
 
 // for testing purposes only, probably does not do what you want!
-#define toggle_srq() IEC_INPUT |= IEC_OBIT_SRQ
+#ifdef __AVR_ATmega128__
+	#define toggle_srq() IEC_PORT ^= IEC_OBIT_SRQ
+#elif
+	#define toggle_srq() IEC_INPUT |= IEC_OBIT_SRQ
+#endif
+
 
 /* IEC lines initialisation */
 static inline void iec_interface_init(void) {
