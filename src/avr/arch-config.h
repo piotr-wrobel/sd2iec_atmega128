@@ -1128,7 +1128,9 @@ static inline void buttons_init(void) {
 /* ---------- Hardware configuration: pvgSD - based on uIEC ---------- */
 /* Note: This CONFIG_HARDWARE_VARIANT number is tested in system.c */
 
-#    define HAVE_SD
+#	define HAVE_DEBUG_LED
+#	define HAVE_SD_LED
+#   define HAVE_SD
 
 #  define SPI_LATE_INIT
 
@@ -1172,6 +1174,12 @@ static inline void device_hw_address_init(void) {
 static inline void leds_init(void) {
   DDRA |= _BV(PA0);
   DDRA |= _BV(PA1);
+#ifdef HAVE_SD_LED
+  DDRF |= _BV(PF1); // debug LED (yellow)
+#endif
+#ifdef HAVE_DEBUG_LED
+  DDRF |= _BV(PF2); // debug LED (yellow)
+#endif
 }
 
 static inline __attribute__((always_inline)) void set_busy_led(uint8_t state) {
@@ -1191,6 +1199,26 @@ static inline __attribute__((always_inline)) void set_dirty_led(uint8_t state) {
 static inline void toggle_dirty_led(void) {
   PORTA ^= _BV(PA0);
 }
+
+#ifdef HAVE_DEBUG_LED
+
+static inline __attribute__((always_inline)) void set_debug_led(uint8_t state) {
+  if (state)
+    PORTF &= ~_BV(PF2);
+  else
+    PORTF |= _BV(PF2);
+}
+#endif
+
+#ifdef HAVE_SD_LED
+
+static inline __attribute__((always_inline)) void set_sd_led(uint8_t state) {
+  if (state)
+    PORTF &= ~_BV(PF1);
+  else
+    PORTF |= _BV(PF1);
+}
+#endif
 
 #  define IEC_INPUT             PINE
 #  define IEC_DDR               DDRE

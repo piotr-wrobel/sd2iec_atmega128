@@ -174,9 +174,18 @@ SD_CHANGE_HANDLER {
 	SDCICR ^= _BV(SDCICB0); //Toggle SD Change Interrupt Configuration ( 11 -> 10 > 11 -> ...(rising edge -> falling edge -> rising edge ->....) )
   #endif
   if (sdcard_detect())
-    disk_state = DISK_CHANGED;
-  else
+  {  
+	disk_state = DISK_CHANGED;
+	#ifdef HAVE_DEBUG_LED
+		set_debug_led(1);
+	#endif
+  }else
+  {
     disk_state = DISK_REMOVED;
+	#ifdef HAVE_DEBUG_LED
+		set_debug_led(0);
+	#endif	
+  }
 }
 #endif
 

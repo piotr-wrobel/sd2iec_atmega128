@@ -59,7 +59,9 @@ int main(void) {
 
   set_busy_led(1);
   set_dirty_led(0);
-
+#ifdef HAVE_DEBUG_LED
+  set_debug_led(1);
+#endif
   /* Due to an erratum in the LPC17xx chips anything that may change */
   /* peripheral clock scalers must come before system_init_late()    */
   uart_init();
@@ -105,6 +107,9 @@ int main(void) {
 #endif
 
   set_busy_led(0);
+#ifdef HAVE_DEBUG_LED
+  set_debug_led(0);
+#endif
 
 #if defined(HAVE_SD) && BUTTON_PREV != 0
   /* card switch diagnostic aid - hold down PREV button to use */
