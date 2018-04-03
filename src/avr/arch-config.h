@@ -1131,26 +1131,13 @@ static inline void buttons_init(void) {
 #    define HAVE_SD
 
 #  define SPI_LATE_INIT
-//#  define CF_CHANGE_HANDLER     ISR(INT7_vect)
+
 #  define SD_CHANGE_HANDLER     ISR(INT7_vect)
 #  define SD_SUPPLY_VOLTAGE     (1L<<21)
 
 /* 250kHz slow, 2MHz fast */
 #  define SPI_DIVISOR_SLOW 32
 #  define SPI_DIVISOR_FAST 4
-
-//#  define SINGLE_LED
-
-// static inline void cfcard_interface_init(void) {
-  // DDRE  &= ~_BV(PE7);
-  // PORTE |=  _BV(PE7);
-  // EICRB |=  _BV(ISC70);
-  // EIMSK |=  _BV(INT7);
-// }
-
-// static inline uint8_t cfcard_detect(void) {
-  // return !(PINE & _BV(PE7));
-// }
 
 #define SDCICB0 ISC70 //SD Change Interrupt Configuration Bit 0
 #define SDCICB1 ISC71 //SD Change Interrupt Configuration Bit 1
@@ -1169,32 +1156,18 @@ static inline uint8_t sdcard_detect(void) {
 }
 
 static inline uint8_t sdcard_wp(void) {
-  return PINB & _BV(PB6);
+  //return PINB & _BV(PB6);
+  return 0; // Always write unprotected
 }
 
 static inline uint8_t device_hw_address(void) {
-  /* No device jumpers on uIEC */
+  /* No device jumpers on SDpvg */
   return 8;
 }
 
 static inline void device_hw_address_init(void) {
   return;
 }
-
-// static inline void leds_init(void) {
-  // DDRE |= _BV(PE3);
-// }
-
-// static inline __attribute__((always_inline)) void set_led(uint8_t state) {
-  // if (state)
-    // PORTE |= _BV(PE3);
-  // else
-    // PORTE &= ~_BV(PE3);
-// }
-
-// static inline void toggle_led(void) {
-  // PINE |= _BV(PE3);
-// }
 
 static inline void leds_init(void) {
   DDRA |= _BV(PA0);
@@ -1203,20 +1176,20 @@ static inline void leds_init(void) {
 
 static inline __attribute__((always_inline)) void set_busy_led(uint8_t state) {
   if (state)
-    PORTA &= ~_BV(PA0);
-  else
-    PORTA |= _BV(PA0);
-}
-
-static inline __attribute__((always_inline)) void set_dirty_led(uint8_t state) {
-  if (state)
     PORTA &= ~_BV(PA1);
   else
     PORTA |= _BV(PA1);
 }
 
+static inline __attribute__((always_inline)) void set_dirty_led(uint8_t state) {
+  if (state)
+    PORTA &= ~_BV(PA0);
+  else
+    PORTA |= _BV(PA0);
+}
+
 static inline void toggle_dirty_led(void) {
-  PORTA ^= _BV(PA1);
+  PORTA ^= _BV(PA0);
 }
 
 #  define IEC_INPUT             PINE
@@ -1257,7 +1230,7 @@ static inline void buttons_init(void) {
 #  define SOFTI2C_DELAY         6
 
 /* Use diskmux code to optionally turn off second IDE drive */
-#  define NEED_DISKMUX
+//#  define NEED_DISKMUX
 
 #  define HAVE_BOARD_INIT
 
@@ -1406,7 +1379,7 @@ static inline __attribute__((always_inline)) void set_srq(uint8_t state) {
 // for testing purposes only, probably does not do what you want!
 #ifdef __AVR_ATmega128__
 	#define toggle_srq() IEC_PORT ^= IEC_OBIT_SRQ
-#elif
+#else
 	#define toggle_srq() IEC_INPUT |= IEC_OBIT_SRQ
 #endif
 
