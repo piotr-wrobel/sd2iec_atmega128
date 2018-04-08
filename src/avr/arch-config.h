@@ -1162,13 +1162,16 @@ static inline uint8_t sdcard_wp(void) {
   return 0; // Always write unprotected
 }
 
+/*** Device address selection ***/
+/* device_hw_address() returns the hardware-selected device address */
 static inline uint8_t device_hw_address(void) {
-  /* No device jumpers on SDpvg */
-  return 8;
+  return 8 + !(PIND & _BV(PA3)) + 2*!(PIND & _BV(PA2));
 }
 
+/* Configure hardware device address pins */
 static inline void device_hw_address_init(void) {
-  return;
+  DDRA  &= ~(_BV(PA2) | _BV(PA3));
+  PORTA |=   _BV(PA2) | _BV(PA3);
 }
 
 static inline void leds_init(void) {
