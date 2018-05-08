@@ -33,7 +33,7 @@
  || defined __AVR_ATmega2561__ \
  || defined __AVR_ATmega1284P__
 
-#  ifdef USE_UART1
+#  ifdef CONFIG_USE_UART1
 #    define RXC   RXC1
 #    define RXEN  RXEN1
 #    define TXC   TXC1
@@ -98,13 +98,77 @@
 #  define OCR2A  OCR2
 
 #elif defined __AVR_ATmega128__
-#  define UBRRH  UBRR0H
-#  define UBRRL  UBRR0L
-#  define UCSRA  UCSR0A
-#  define UCSRB  UCSR0B
-#  define UCSRC  UCSR0C
-#  define UDR    UDR0
-#  define USART_UDRE_vect USART0_UDRE_vect
+	
+#ifdef RXC
+#undef RXC
+#endif
+
+#ifdef RXEN
+#undef RXEN
+#endif
+
+#ifdef TXC
+#undef TXC
+#endif
+
+#ifdef TXEN
+#undef TXEN
+#endif
+
+#ifdef UCSZ0
+#undef UCSZ0
+#endif
+
+#ifdef UCSZ1
+#undef UCSZ1
+#endif
+
+#ifdef UDRIE
+#undef UDRIE
+#endif
+
+#ifdef RXCIE
+#undef RXCIE
+#endif
+
+#  ifdef CONFIG_USE_UART1
+#    define RXC   RXC1
+#    define RXEN  RXEN1
+#    define TXC   TXC1
+#    define TXEN  TXEN1
+#    define UBRRH UBRR1H
+#    define UBRRL UBRR1L
+#    define UCSRA UCSR1A
+#    define UCSRB UCSR1B
+#    define UCSRC UCSR1C
+#    define UCSZ0 UCSZ10
+#    define UCSZ1 UCSZ11
+#    define UDR   UDR1
+#    define UDRIE UDRIE1
+#    define RXCIE RXCIE1
+#    define USART_UDRE_vect USART1_UDRE_vect
+#    define USART_RX_vect   USART1_RX_vect
+#  else
+	 /* Default is USART0 */
+#    define RXC   RXC0
+#    define RXEN  RXEN0
+#    define TXC   TXC0
+#    define TXEN  TXEN0
+#    define UBRRH UBRR0H
+#    define UBRRL UBRR0L
+#    define UCSRA UCSR0A
+
+#    define UCSRB UCSR0B
+#    define UCSRC UCSR0C
+#    define UCSZ0 UCSZ00
+#    define UCSZ1 UCSZ01
+#    define UDR   UDR0
+#    define UDRIE UDRIE0
+#    define RXCIE RXCI0
+#    define USART_UDRE_vect USART0_UDRE_vect
+#    define USART_RX_vect   USART0_RX_vect
+#  endif
+
 #  define TIMER2_COMPA_vect TIMER2_COMP_vect
 #  define TCCR0B TCCR0
 #  define TCCR2A TCCR2
