@@ -1165,18 +1165,18 @@ static inline uint8_t sdcard_wp(void) {
 /*** Device address selection ***/
 /* device_hw_address() returns the hardware-selected device address */
 static inline uint8_t device_hw_address(void) {
-  return 8 + !(PIND & _BV(PA3)) + 2*!(PIND & _BV(PA2));
+  return 8 + !(PIND & _BV(PA4)) + 2*!(PIND & _BV(PA3));
 }
 
 /* Configure hardware device address pins */
 static inline void device_hw_address_init(void) {
-  DDRA  &= ~(_BV(PA2) | _BV(PA3));
-  PORTA |=   _BV(PA2) | _BV(PA3);
+  DDRA  &= ~(_BV(PA3) | _BV(PA4));
+  PORTA |=   _BV(PA3) | _BV(PA4);
 }
 
 static inline void leds_init(void) {
-  DDRA |= _BV(PA0);
   DDRA |= _BV(PA1);
+  DDRA |= _BV(PA2);
 #ifdef HAVE_SD_LED
   DDRF |= _BV(PF1); // debug LED (yellow)
 #endif
@@ -1187,20 +1187,20 @@ static inline void leds_init(void) {
 
 static inline __attribute__((always_inline)) void set_busy_led(uint8_t state) {
   if (state)
+    PORTA &= ~_BV(PA2);
+  else
+    PORTA |= _BV(PA2);
+}
+
+static inline __attribute__((always_inline)) void set_dirty_led(uint8_t state) {
+  if (state)
     PORTA &= ~_BV(PA1);
   else
     PORTA |= _BV(PA1);
 }
 
-static inline __attribute__((always_inline)) void set_dirty_led(uint8_t state) {
-  if (state)
-    PORTA &= ~_BV(PA0);
-  else
-    PORTA |= _BV(PA0);
-}
-
 static inline void toggle_dirty_led(void) {
-  PORTA ^= _BV(PA0);
+  PORTA ^= _BV(PA1);
 }
 
 #ifdef HAVE_DEBUG_LED
