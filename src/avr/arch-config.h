@@ -1363,68 +1363,26 @@ typedef uint8_t iec_bus_t;
 #  define COND_INV(x) (x)
 #endif
 
-#ifdef IEC_SEPARATE_OUT
 static inline __attribute__((always_inline)) void set_atn(uint8_t state) {
   if (COND_INV(state))
     IEC_OUTPUT |= IEC_OBIT_ATN;
   else
     IEC_OUTPUT &= ~IEC_OBIT_ATN;
 }
-#else
-/* this version of the function turns on the pullups when state is 1 */
-/* note: same pin for in/out implies inverted output via DDR */
-static inline __attribute__((always_inline)) void set_atn(uint8_t state) {
-  if (state) {
-    IEC_DDR  &= ~IEC_OBIT_ATN;
-    IEC_PORT |=  IEC_OBIT_ATN;
-  } else {
-    IEC_PORT &= ~IEC_OBIT_ATN;
-    IEC_DDR  |=  IEC_OBIT_ATN;
-  }
-}
-#endif
 
-#ifdef IEC_SEPARATE_OUT
 static inline __attribute__((always_inline)) void set_data(uint8_t state) {
   if (COND_INV(state))
     IEC_OUTPUT |= IEC_OBIT_DATA;
   else
     IEC_OUTPUT &= ~IEC_OBIT_DATA;
 }
-#else
-/* this version of the function turns on the pullups when state is 1 */
-/* note: same pin for in/out implies inverted output via DDR */
-static inline __attribute__((always_inline)) void set_data(uint8_t state) {
-  if (state) {
-    IEC_DDR  &= ~IEC_OBIT_DATA;
-    IEC_PORT |=  IEC_OBIT_DATA;
-  } else {
-    IEC_PORT &= ~IEC_OBIT_DATA;
-    IEC_DDR  |=  IEC_OBIT_DATA;
-  }
-}
-#endif
 
-#ifdef IEC_SEPARATE_OUT
 static inline __attribute__((always_inline)) void set_clock(uint8_t state) {
   if (COND_INV(state))
     IEC_OUTPUT |= IEC_OBIT_CLOCK;
   else
     IEC_OUTPUT &= ~IEC_OBIT_CLOCK;
 }
-#else
-/* this version of the function turns on the pullups when state is 1 */
-/* note: same pin for in/out implies inverted output via DDR */
-static inline __attribute__((always_inline)) void set_clock(uint8_t state) {
-  if (state) {
-    IEC_DDR  &= ~IEC_OBIT_CLOCK;
-    IEC_PORT |=  IEC_OBIT_CLOCK;
-  } else {
-    IEC_PORT &= ~IEC_OBIT_CLOCK;
-    IEC_DDR  |=  IEC_OBIT_CLOCK;
-  }
-}
-#endif
 
 #ifdef IEC_SEPARATE_OUT
 static inline __attribute__((always_inline)) void set_srq(uint8_t state) {
@@ -1467,9 +1425,12 @@ static inline void iec_interface_init(void) {
   IEC_DDROUT |=            IEC_OBIT_ATN | IEC_OBIT_CLOCK | IEC_OBIT_DATA | IEC_OBIT_SRQ;
   IEC_PORT   &= (uint8_t)~(IEC_OBIT_ATN | IEC_OBIT_CLOCK | IEC_OBIT_DATA | IEC_OBIT_SRQ);
 #else
-  /* Pullups would be nice, so ... why not ?:) */
+  /* Pullups would be nice, but AVR can't switch from */
+  /* low output to hi-z input directly                */
   IEC_DDR  &= (uint8_t)~(IEC_BIT_ATN | IEC_BIT_CLOCK | IEC_BIT_DATA | IEC_BIT_SRQ);
-  IEC_PORT |= (IEC_BIT_ATN | IEC_BIT_CLOCK | IEC_BIT_DATA | IEC_BIT_SRQ);
+  IEC_PORT &= (uint8_t)~(IEC_BIT_ATN | IEC_BIT_CLOCK | IEC_BIT_DATA);
+  /* SRQ is special-cased because it may be unconnected */
+  IEC_PORT |= IEC_BIT_SRQ;
 #endif
 
 #ifdef HAVE_PARALLEL
