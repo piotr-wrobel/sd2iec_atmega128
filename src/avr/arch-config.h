@@ -1165,7 +1165,7 @@ static inline uint8_t sdcard_wp(void) {
 /*** Device address selection ***/
 /* device_hw_address() returns the hardware-selected device address */
 static inline uint8_t device_hw_address(void) {
-  return 8 + !(PIND & _BV(PA4)) + 2*!(PIND & _BV(PA3));
+  return 8 + !(PINA & _BV(PA4)) + 2*!(PINA & _BV(PA3));
 }
 
 /* Configure hardware device address pins */
