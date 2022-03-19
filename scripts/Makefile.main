@@ -7,7 +7,7 @@ PATCHLEVEL = 0
 FIX =
 
 # Forces bootloader version to 0, comment out or leave empty for release
-PRERELEASE = atentdead0
+PRERELEASE = ad0-29-1.2
 
 #----------------------------------------------------------------------------
 # WinAVR Makefile Template written by Eric B. Weddington, Joerg Wunsch, et al.
@@ -407,4 +407,3 @@ clean:
 .PHONY : all sizebefore sizeafter gccversion \
 build elf hex eep lss sym coff extcoff \
 clean clean_list program debug gdb-config doxygen
-
